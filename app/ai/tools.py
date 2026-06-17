@@ -54,7 +54,8 @@ async def get_articles(
     status: ArticleStatus | None = None,
 ) -> list[dict]:
     """
-    Get articles with optional pagination and status filter.
+    Retrieve an article by its ID.
+    Returns title, content, status and metadata.
     """
 
     async with get_article_service() as service:

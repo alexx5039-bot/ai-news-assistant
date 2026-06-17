@@ -32,3 +32,4 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
+

@@ -1,29 +1,18 @@
 import asyncio
 
-from app.ai.agent import agent
+from app.ai.graph.workflow import graph
 
 
 async def main():
-    result = await agent.ainvoke(
+    result = await graph.ainvoke(
         {
-            "messages": [
-                {
-                    "role": "user",
-                    "content": "Search for latest AI news, create an article from them and save it"
-                }
-            ]
+            "topic": "Artificial Intelligence"
         }
     )
 
-    for message in result["messages"]:
-        print(type(message).__name__)
+    print("FINAL STATE:")
+    print(result)
 
-        if hasattr(message, "tool_calls") and message.tool_calls:
-            for tool_call in message.tool_calls:
-                print(f"Tool: {tool_call['name']}")
-                print(f"Args: {tool_call['args']}")
-
-        print("-" * 50)
 
 if __name__ == "__main__":
     asyncio.run(main())
