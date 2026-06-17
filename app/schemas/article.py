@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from app.db.enums import ArticleStatus
 
 class ArticleCreate(BaseModel):
@@ -33,3 +33,12 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
 
+class GenerateArticleRequest(BaseModel):
+    topic: str
+
+class GenerateArticleResponse(BaseModel):
+    article_id: int
+    topic: str
+
+class ReviewResponse(BaseModel):
+    score: int = Field(ge=1, le=10)

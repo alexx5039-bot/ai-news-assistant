@@ -4,9 +4,9 @@ from app.ai.graph.state import ArticleState
 from app.ai.tools import (
     search_news,
     create_article,
-    get_article,
-    update_article,
 )
+from app.schemas.article import ReviewResponse
+
 
 async def research_node(state: ArticleState):
     news = await search_news.ainvoke(
@@ -17,6 +17,7 @@ async def research_node(state: ArticleState):
     }
 
 async def writer_node(state: ArticleState):
+
     prompt = WRITER_PROMPT.format(
         news=state["news"]
     )
@@ -37,6 +38,20 @@ async def editor_node(state: ArticleState):
         "content": response.content
     }
 
+async def title_generator_node(state: ArticleState):
+    response = await llm.ainvoke(
+        f"""
+        Generate a concise news headline (max 10 words)
+        for the following article.
+
+        {state["content"]}
+        """
+    )
+
+    return {
+        "title": response.content.strip()
+    }
+
 async def publisher_node(state: ArticleState):
     article = await create_article.ainvoke({
         "title": state["title"],
@@ -45,4 +60,26 @@ async def publisher_node(state: ArticleState):
     )
     return {
         "article_id": article["id"]
+    }
+
+async def reviewer_node(state: ArticleState):
+    response = await llm.with_structured_output(
+        ReviewResponse
+    ).ainvoke(
+        f"""
+        Review the article and rate its quality from 1 to 10.
+
+        Consider:
+        - clarity
+        - grammar
+        - structure
+        - factual consistency
+
+        Article:
+        {state["content"]}
+        """
+    )
+
+    return {
+        "quality_score": response.score
     }
