@@ -1,6 +1,7 @@
 from typing import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from contextlib import asynccontextmanager
 from app.db.database import AsyncSessionLocal
 from app.repositories.article import ArticleRepository
 from app.services.article import ArticleService
@@ -22,3 +23,11 @@ def get_article_service(
         )
 ) -> ArticleService:
     return ArticleService(repository)
+
+@asynccontextmanager
+async def get_article_service():
+    async with AsyncSessionLocal() as session:
+        repository = ArticleRepository(session)
+        service = ArticleService(repository)
+
+        yield service

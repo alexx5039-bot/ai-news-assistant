@@ -25,3 +25,10 @@ class ArticleUpdate(BaseModel):
 
 class ArticleStatusUpdate(BaseModel):
     status: ArticleStatus
+
+class ChatRequest(BaseModel):
+    message: str
+
+
+class ChatResponse(BaseModel):
+    response: str
