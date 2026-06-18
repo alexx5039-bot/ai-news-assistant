@@ -4,7 +4,7 @@ def review_router(state: ArticleState):
 
     if state["quality_score"] >= 5:
 
-        return "publisher"
+        return "summarizer"
 
     if state["review_attempts"] >= 2:
         return "publisher"

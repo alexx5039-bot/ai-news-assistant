@@ -53,9 +53,13 @@ async def title_generator_node(state: ArticleState):
     }
 
 async def publisher_node(state: ArticleState):
+    print("STATE IN PUBLISHER:")
+    print(state)
+
     article = await create_article.ainvoke({
         "title": state["title"],
-        "content": state["content"]
+        "content": state["content"],
+        "summary": state["summary"]
         }
     )
     return {
@@ -82,4 +86,18 @@ async def reviewer_node(state: ArticleState):
 
     return {
         "quality_score": response.score
+    }
+
+async def summarizer_node(state: ArticleState):
+    response = await llm.ainvoke(
+        f"""
+        Summarize the following news article in 2-3 sentences.
+
+        Article:
+        {state["content"]}
+        """
+    )
+
+    return {
+        "summary": response.content.strip()
     }

@@ -8,6 +8,7 @@ class ArticleState(TypedDict):
     news: str
     title: str
     content: str
+    summary: str
     quality_score: int
     review_attempts: int
     article_id: int | None

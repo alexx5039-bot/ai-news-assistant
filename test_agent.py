@@ -4,14 +4,12 @@ from app.ai.graph.workflow import graph
 
 
 async def main():
-    result = await graph.ainvoke(
+    async for event in graph.astream(
         {
-            "topic": "Artificial Intelligence"
+            "topic": "AI"
         }
-    )
-
-    print("FINAL STATE:")
-    print(result)
+    ):
+        print(event)
 
 
 if __name__ == "__main__":

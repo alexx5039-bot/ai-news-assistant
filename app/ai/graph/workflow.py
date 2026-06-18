@@ -7,7 +7,8 @@ from app.ai.graph.nodes import (
     editor_node,
     publisher_node,
     title_generator_node,
-    reviewer_node
+    reviewer_node,
+    summarizer_node
 )
 
 builder = StateGraph(ArticleState)
@@ -18,6 +19,7 @@ builder.add_node("editor", editor_node)
 builder.add_node("publisher", publisher_node)
 builder.add_node("title_generator", title_generator_node)
 builder.add_node("reviewer", reviewer_node)
+builder.add_node("summarizer", summarizer_node)
 
 
 builder.add_edge(START, "research")
@@ -29,10 +31,12 @@ builder.add_conditional_edges(
     "reviewer",
     review_router,
     {
-        "publisher": "publisher",
+        "summarizer": "summarizer",
         "writer": "writer",
     }
 )
+
+builder.add_edge("summarizer", "publisher")
 builder.add_edge("publisher", END)
 
 graph = builder.compile()
