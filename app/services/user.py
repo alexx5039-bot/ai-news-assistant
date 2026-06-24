@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordRequestForm
 
 from app.core.security import hash_password, verify_password, create_access_token
 from app.db.models import User
