@@ -4,3 +4,7 @@ class ArticleStatus(Enum):
     DRAFT = "draft"
     PUBLISHED = "published"
     ARCHIVED = "archived"
+
+class UserRole(Enum):
+    USER = "user"
+    ADMIN = "admin"

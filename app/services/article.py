@@ -7,19 +7,28 @@ from fastapi import HTTPException
 from app.db.enums import ArticleStatus
 from app.db.models import Article
 from app.repositories.article import ArticleRepository
+from app.repositories.user import UserRepository
 from app.schemas.article import ArticleCreate, ArticleUpdate
 
 
 class ArticleService:
-    def __init__(self, repository: ArticleRepository):
+    def __init__(self, repository: ArticleRepository,
+                 user_repository: UserRepository):
         self.repository = repository
+        self.user_repository = user_repository
 
     async def create_article(
             self,
-            article_data: ArticleCreate
+            article_data: ArticleCreate,
     ) -> Article:
+
+        ai_user = await self.user_repository.get_user_by_username(
+            "ai_assistant"
+        )
+
         return await self.repository.create(
-            article_data
+            article_data,
+            ai_user.id
         )
 
     async def get_article(self, article_id: int) -> Article:
@@ -99,3 +108,16 @@ class ArticleService:
         article.status = status
 
         return await self.repository.update_article(article)
+
+
+    async def create_source(
+        self,
+        article_id: int,
+        title: str,
+        url: str
+    ):
+        return await self.repository.create_source(
+            article_id=article_id,
+            title=title,
+            url=url
+        )

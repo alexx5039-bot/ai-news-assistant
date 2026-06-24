@@ -3,17 +3,19 @@ from app.ai.graph.prompts import WRITER_PROMPT, EDITOR_PROMPT
 from app.ai.graph.state import ArticleState
 from app.ai.tools import (
     search_news,
-    create_article,
+    create_article, create_article_source,
 )
 from app.schemas.article import ReviewResponse
 
 
 async def research_node(state: ArticleState):
-    news = await search_news.ainvoke(
+    result = await search_news.ainvoke(
         {"query": state["topic"]}
     )
+
     return {
-        "news": news
+        "news": result["news"],
+        "sources": result["sources"]
     }
 
 async def writer_node(state: ArticleState):
@@ -54,14 +56,22 @@ async def title_generator_node(state: ArticleState):
 
 async def publisher_node(state: ArticleState):
     print("STATE IN PUBLISHER:")
+    print(state["sources"])
     print(state)
 
     article = await create_article.ainvoke({
         "title": state["title"],
         "content": state["content"],
         "summary": state["summary"]
-        }
-    )
+    })
+
+    for source in state["sources"]:
+        await create_article_source.ainvoke({
+            "article_id": article["id"],
+            "title": source["title"],
+            "url": source["url"]
+        })
+
     return {
         "article_id": article["id"]
     }

@@ -1,6 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.ai.agent import agent
+from app.db.dependencies import get_current_user
+from app.db.models import User
 from app.schemas.article import (
     ChatRequest,
     ChatResponse,
@@ -17,7 +19,8 @@ router = APIRouter(
     response_model=ChatResponse,
 )
 async def chat(
-    request: ChatRequest,
+    request: ChatRequest
+
 ) -> ChatResponse:
 
     result = await agent.ainvoke(

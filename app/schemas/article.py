@@ -8,12 +8,20 @@ class ArticleCreate(BaseModel):
     title: str
     content: str
 
+class ArticleSourceResponse(BaseModel):
+    id: int
+    title: str
+    url: str
+
+    model_config = ConfigDict(from_attributes=True)
+
 class ArticleResponse(BaseModel):
     id: int
     title: str
     content: str
     status: ArticleStatus
     created_at: datetime
+    sources: list[ArticleSourceResponse] = []
 
     model_config = ConfigDict(
         from_attributes=True
@@ -42,3 +50,8 @@ class GenerateArticleResponse(BaseModel):
 
 class ReviewResponse(BaseModel):
     score: int = Field(ge=1, le=10)
+
+class ArticleSourceCreate(BaseModel):
+    article_id: int
+    title: str
+    url: str

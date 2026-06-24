@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 import json
 
 from app.ai.graph.workflow import graph
+from app.db.dependencies import get_current_user
+from app.db.models import User
 from app.schemas.article import (
     GenerateArticleRequest,
     GenerateArticleResponse
@@ -18,7 +20,8 @@ router = APIRouter(
     response_model=GenerateArticleResponse
 )
 async def generate_article(
-        request: GenerateArticleRequest
+        request: GenerateArticleRequest,
+        current_user: User = Depends(get_current_user)
 ):
     result = await graph.ainvoke(
         {
@@ -34,7 +37,8 @@ async def generate_article(
 
 @router.post("/generate-article-stream")
 async def generate_article_stream(
-        request: GenerateArticleRequest
+        request: GenerateArticleRequest,
+        current_user: User = Depends(get_current_user)
 ):
     async def event_generator():
 

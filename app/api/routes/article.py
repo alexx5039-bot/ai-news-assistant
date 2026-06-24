@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
 
-from app.db.dependencies import get_article_service
+from app.db.dependencies import get_article_service, get_current_user, get_current_user_admin
 from app.db.enums import ArticleStatus
+from app.db.models import User
 from app.schemas.article import ArticleCreate, ArticleResponse, ArticleUpdate, ArticleStatusUpdate
 from app.services.article import ArticleService
 
@@ -15,6 +16,7 @@ router = APIRouter(
 @router.post("/", response_model=ArticleResponse)
 async def create_article(
         article: ArticleCreate,
+        current_user: User = Depends(get_current_user),
         service: ArticleService = Depends(get_article_service)
 ):
     return await service.create_article(article)
@@ -23,7 +25,8 @@ async def create_article(
 @router.get("/{article_id}", response_model=ArticleResponse)
 async def get_article(
         article_id: int,
-        service: ArticleService = Depends(get_article_service)
+        service: ArticleService = Depends(get_article_service),
+        current_user: User = Depends(get_current_user)
 ):
     return await service.get_article(article_id)
 
@@ -33,7 +36,8 @@ async def get_articles(
         limit: int = Query(10, ge=1, le=100),
         offset: int = Query(0, ge=0),
         status: ArticleStatus | None = None,
-        service: ArticleService = Depends(get_article_service)
+        service: ArticleService = Depends(get_article_service),
+        current_user: User = Depends(get_current_user)
 ):
     return await service.get_articles(
         limit=limit,
@@ -44,7 +48,8 @@ async def get_articles(
 @router.delete("/{article_id}", status_code=204)
 async def delete_article(
         article_id: int,
-        service: ArticleService = Depends(get_article_service)
+        service: ArticleService = Depends(get_article_service),
+        current_user: User = Depends(get_current_user_admin)
 ):
     await service.delete_article(article_id)
 
@@ -52,7 +57,8 @@ async def delete_article(
 async def update_article(
         article_id: int,
         article_data: ArticleUpdate,
-        service: ArticleService = Depends(get_article_service)
+        service: ArticleService = Depends(get_article_service),
+        current_user: User = Depends(get_current_user)
 ):
     return await service.update_article(article_id, article_data)
 
@@ -60,7 +66,8 @@ async def update_article(
 async def update_status(
         article_id: int,
         status_data: ArticleStatusUpdate,
-        service: ArticleService = Depends(get_article_service)
+        service: ArticleService = Depends(get_article_service),
+        current_user: User = Depends(get_current_user)
 ):
     return await service.update_status(
         article_id=article_id,

@@ -1,28 +1,33 @@
 from __future__ import annotations
 
+import traceback
+
+import requests
 from langchain.tools import tool
 
 from app.core.config import settings
-from app.db.dependencies import get_article_service
+from app.db.dependencies import get_article_service, get_article_service_context
 from app.db.enums import ArticleStatus
 from app.db.models import Article
 from app.schemas.article import ArticleResponse, ArticleCreate, ArticleUpdate
-from app.services.news import NewsService
+
 
 
 @tool
 async def create_article(
         title: str,
-        content: str
+        content: str,
+        summary: str
 ):
     """
     Create a new article
     """
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
         article_create = ArticleCreate(
             title=title,
-            content=content
+            content=content,
+            summary=summary
         )
         article = await service.create_article(
             article_create
@@ -37,7 +42,7 @@ async def get_article(
     """
     Get article with provided id
     """
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
 
         article = await service.get_article(
@@ -49,7 +54,7 @@ async def get_article(
 
 @tool
 async def get_articles(
-    limit: int = 10,
+    limit: int = 50,
     offset: int = 0,
     status: ArticleStatus | None = None,
 ) -> list[dict]:
@@ -58,20 +63,26 @@ async def get_articles(
     Returns title, content, status and metadata.
     """
 
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
-        articles = await service.get_articles(
-            limit=limit,
-            offset=offset,
-            status=status,
-        )
+        try:
+            articles = await service.get_articles(
+                limit=limit,
+                offset=offset,
+                status=status,
+            )
 
-        return [
-            ArticleResponse.model_validate(
-                article
-            ).model_dump()
-            for article in articles
-        ]
+            return [
+                ArticleResponse.model_validate(
+                    article
+                ).model_dump()
+                for article in articles
+            ]
+        except Exception:
+            traceback.print_exc()
+            raise
+
+
 
 @tool
 async def update_article_status(
@@ -82,7 +93,7 @@ async def update_article_status(
     Update article status.
     """
 
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
         article = await service.update_status(
             article_id=article_id,
@@ -101,7 +112,7 @@ async def update_article(
     """
     Update article with provided id
     """
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
 
         article = await service.update_article(
@@ -118,7 +129,7 @@ async def delete_article(
     """
     Delete article with provided id
     """
-    async with get_article_service() as service:
+    async with get_article_service_context() as service:
 
 
         await service.delete_article(
@@ -130,19 +141,63 @@ async def delete_article(
         }
 
 
-@tool
-async def search_news(query: str) -> str:
-    """
-    Search latest news by topic
-    """
-    news_service = NewsService(settings.gnews_api_key)
-    result = await news_service.search_news(query)
-    articles = result.get("articles", [])
-    if not articles:
-        return "No news found"
 
-    return "\n".join(
+
+@tool
+async def search_news(query: str) -> dict:
+    """
+    Search recent news articles by topic.
+    """
+
+    response = requests.get(
+        "https://gnews.io/api/v4/search",
+        params={
+            "q": query,
+            "apikey": settings.gnews_api_key,
+            "lang": "en",
+            "max": 10,
+        }
+    )
+
+    response.raise_for_status()
+
+    articles = response.json()["articles"]
+
+    news_text = "\n".join(
         f"Title: {article['title']}\n"
         f"Description: {article.get('description', '')}"
         for article in articles[:5]
     )
+
+    return {
+        "news": news_text,
+        "sources": [
+            {
+                "title": article["title"],
+                "url": article.get("url", "")
+            }
+            for article in articles[:5]
+        ]
+    }
+
+@tool
+async def create_article_source(
+    article_id: int,
+    title: str,
+    url: str
+):
+    """
+    Create article source.
+    """
+
+    async with get_article_service_context() as service:
+
+        source = await service.create_source(
+            article_id=article_id,
+            title=title,
+            url=url
+        )
+
+        return {
+            "id": source.id
+        }
